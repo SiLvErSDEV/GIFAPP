@@ -1,0 +1,63 @@
+<div>
+        <h4 class="mb-3">Todos los Pedidos Registrados</h4>
+        <div class="table-responsive shadow rounded p-3 bg-white">
+            <table class="table table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Teléfono</th>
+                        <th>Descripción</th>
+                        <th>Para</th>
+                        <th>Papel</th>
+                        <th>Caja</th>
+                        <th>Listón</th>
+                        <th>Moño</th>
+                        <th>Etiqueta</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pedido in pedidos %}
+                    <tr>
+                        <td>
+                            <!-- 🔵 NUEVO: Click para modal -->
+                            <span class="clickable pedido-link" data-id="{{ pedido.id }}">
+                                {{ pedido.id }}
+                            </span>
+                        </td>
+                        <td>{{ pedido.cliente.nombre if pedido.cliente else '—' }}</td>
+                        <td>{{ pedido.cliente.telefono if pedido.cliente else '—' }}</td>
+                        <td>{{ pedido.descripcion }}</td>
+                        <td>{{ pedido.para }}</td>
+                        <td>{{ pedido.papel }}</td>
+                        <td>{{ pedido.caja }}</td>
+                        <td>{{ pedido.liston }}</td>
+                        <td>{{ pedido.mono }}</td>
+                        <td>{{ pedido.etiqueta }}</td>
+                        <td>
+                            <span class="badge
+                                {% if pedido.estado == 'Registrado' %} bg-primary
+                                {% elif pedido.estado == 'Cancelado' %} bg-danger
+                                {% elif pedido.estado == 'Procesado' %} bg-success
+                                {% else %} bg-secondary {% endif %}">
+                                {{ pedido.estado }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if pedido.estado != 'Cancelado' %}
+                            <form method="POST" action="{{ url_for('cancelar_pedido', pedido_id=pedido.id) }}" onsubmit="return confirm('¿Cancelar este pedido?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Cancelar</button>
+                            </form>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

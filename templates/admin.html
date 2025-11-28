@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Administración</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .clickable {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<header class="p-4 mb-4 border-bottom text-center">
+    <h2>📋 Panel de Administración</h2>
+</header>
+
+<script>
+    const encargadoGuardado = "{{ encargado_session or '' }}";
+</script>
+<div class="container my-5">
+
+    <!-- 🔍 Buscador DEBE QUEDAR INTACTO -->
+    <div class="shadow p-4 bg-white rounded mb-5">
+        <form method="POST" class="row g-3 align-items-center">
+            <div class="col-md-6">
+                <label for="cliente_id" class="form-label">Buscar por ID de Cliente</label>
+                <input type="number" id="cliente_id" name="cliente_id" class="form-control" placeholder="Ejemplo: 3" required>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-lang w-100">Buscar</button>
+            </div>
+        </form>
+
+        {% if cliente %}
+            <hr>
+            <h5>Resultados para: {{ cliente.nombre }} ({{ cliente.telefono }})</h5>
+            {% if resultados %}
+                <div class="table-responsive shadow rounded p-3 bg-white mt-3">
+                    <table class="table table-striped align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Descripción</th>
+                                <th>Para</th>
+                                <th>Papel</th>
+                                <th>Caja</th>
+                                <th>Listón</th>
+                                <th>Moño</th>
+                                <th>Etiqueta</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in resultados %}
+                            <tr>
+                                <td>
+                                    <!-- 🔵 NUEVO: Click para abrir modal -->
+                                    <span class="clickable pedido-link" data-id="{{ r.id }}">
+                                        {{ r.id }}
+                                    </span>
+                                </td>
+                                <td>{{ r.descripcion }}</td>
+                                <td>{{ r.para }}</td>
+                                <td>{{ r.papel }}</td>
+                                <td>{{ r.caja }}</td>
+                                <td>{{ r.liston }}</td>
+                                <td>{{ r.mono }}</td>
+                                <td>{{ r.etiqueta }}</td>
+                                <td>
+                                    <span class="badge
+                                        {% if r.estado == 'Registrado' %} bg-primary
+                                        {% elif r.estado == 'Aceptado' %} bg-secondary
+                                        {% elif r.estado == 'Cancelado' %} bg-danger
+                                        {% elif r.estado == 'Procesado' %} bg-success
+                                        {% elif r.estado == 'Facturado' %} bg-warning
+                                        {% else %} bg-secondary {% endif %}">
+                                        {{ r.estado }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if r.estado != 'Cancelado' %}
+                                    <form method="POST" action="{{ url_for('cancelar_pedido', pedido_id=r.id) }}" onsubmit="return confirm('¿Cancelar este pedido?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Cancelar</button>
+                                    </form>
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-warning mt-3">No se encontraron regalos para este cliente.</div>
+            {% endif %}
+        {% elif request.method == 'POST' %}
+            <div class="alert alert-danger mt-3">Cliente no encontrado.</div>
+        {% endif %}
+    </div>
+
+
+<h3 class="mt-4 mb-3">Pedidos</h3>
+
+<div class="table-responsive shadow rounded p-3 bg-white mb-4">
+    <table class="table table-striped align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>ID Pedido</th>
+                <th>Cliente</th>
+                <th>Total de Envolturas</th>
+                <th>Pendientes de Facturar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in pedidos_info %}
+            <tr>
+                <td>{{ p.id }}</td>
+                <td>{{ p.cliente }}</td>
+                <td>{{ p.total }}</td>
+                <td>
+                    {% if p.pendientes > 0 %}
+
+
+                        <span class="badge bg-warning">{{ p.pendientes }}</span>
+                    {% else %}
+
+                        <span class="badge bg-success">Facturado</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- 🔽 TABS PARA FILTRAR PEDIDOS POR ESTADO -->
+<ul class="nav nav-tabs mt-4" id="pedidoTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="registrados-tab" data-bs-toggle="tab"
+                data-bs-target="#registrados" type="button" role="tab">
+            Registrados
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="procesados-tab" data-bs-toggle="tab"
+                data-bs-target="#procesados" type="button" role="tab">
+            Aceptados
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="envueltos-tab" data-bs-toggle="tab"
+                data-bs-target="#envueltos" type="button" role="tab">
+            Envueltos
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="facturados-tab" data-bs-toggle="tab"
+                data-bs-target="#facturados" type="button" role="tab">
+            Facturados
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="todos-tab" data-bs-toggle="tab"
+                data-bs-target="#todos" type="button" role="tab">
+            Todos
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="cancelados-tab" data-bs-toggle="tab"
+                data-bs-target="#cancelados" type="button" role="tab">
+            Cancelados
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="pedidoTabsContent">
+
+    <!-- TAB 1: REGISTRADOS -->
+    <div class="tab-pane fade show active p-3" id="registrados" role="tabpanel">
+        {% include 'partials/tabla_registrados.html' %}
+    </div>
+
+    <!-- TAB 2: PROCESADOS -->
+    <div class="tab-pane fade p-3" id="procesados" role="tabpanel">
+        {% include 'partials/tabla_procesados.html' %}
+    </div>
+
+    <!-- TAB 3: CANCELADOS -->
+    <div class="tab-pane fade p-3" id="envueltos" role="tabpanel">
+        {% include 'partials/tabla_envueltos.html' %}
+    </div>
+
+    <!-- TAB 4: FACTURADOS -->
+
+    <div class="tab-pane fade p-3" id="facturados" role="tabpanel">
+        {% include 'partials/tabla_facturados.html' %}
+    </div>
+
+    <!-- TAB 4: TODOS -->
+    <div class="tab-pane fade p-3" id="todos" role="tabpanel">
+        {% include 'partials/tabla_todos.html' %}
+    </div>
+
+    <!-- TAB 3: CANCELADOS -->
+    <div class="tab-pane fade p-3" id="cancelados" role="tabpanel">
+        {% include 'partials/tabla_cancelados.html' %}
+    </div>
+
+</div>
+
+</div>
+
+
+<!-- 🔵 NUEVO: MODAL PARA PROCESAR PEDIDO -->
+<div class="modal fade" id="modalProcesar" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Procesar Pedido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalContenido">
+                Cargando...
+            </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" id="btnGuardar">Guardar y Procesar</button>
+        </div>
+        </div>
+    </div>
+</div>
+
+
+<footer class="footer-campagne text-center py-3 mt-5">
+    <p class="mb-0 text-white">© 2025 Portal de Administración - VRA Paint</p>
+</footer>
+
+
+<!-- Modal para propinas/donación -->
+<div class="modal fade" id="modalPropinaDonacion" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="formPropinaDonacion" method="POST">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Propina y Donación del Pedido</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <input type="hidden" name="pedido_id" id="pedido_id_modal">
+
+          <label>Propina:</label>
+          <input type="number" name="propina" step="0.1" min="0" class="form-control" />
+
+          <label class="mt-2">Donación:</label>
+          <input type="number" name="donacion" step="0.1" min="0" class="form-control" />
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<script>
+function abrirModalDonacionPropina(pedido_id) {
+
+    // Seteas el hidden
+    document.getElementById("pedido_id_modal").value = pedido_id;
+
+    // ARMAS el action del form dinámicamente
+    document.getElementById("formPropinaDonacion").action =
+        "/actualizar_propina_donacion/" + pedido_id;
+
+    // Mostrar modal en Bootstrap 5
+    const modal = new bootstrap.Modal(
+        document.getElementById("modalPropinaDonacion")
+    );
+    modal.show();
+}
+</script>
+<script>
+function generarBoleta(id) {
+    fetch("/generar_boleta/" + id)
+        .then(response => {
+
+            // ---- Descargar boleta individual ----
+            return response.blob().then(blob => {
+                const url = window.URL.createObjectURL(blob);
+
+                // Obtener filename desde header
+                let filename = "boleta.pdf";
+                const disp = response.headers.get("Content-Disposition");
+                if (disp && disp.includes("filename=")) {
+                    filename = disp.split("filename=")[1].replace(/"/g, "");
+                }
+
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+
+                // ---- Si es la última envoltura → redirigir ----
+                const redirectURL = response.headers.get("X-Redirect-Generar-General");
+                if (redirectURL) {
+                    setTimeout(() => {
+                        window.location.href = redirectURL;
+                    }, 800);
+                }
+            });
+
+        })
+        .catch(err => console.error("Error generando boleta:", err));
+}
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+
+// 🔵 CLICK EN ID → abrir modal
+document.querySelectorAll(".pedido-link").forEach(el => {
+    el.addEventListener("click", async () => {
+        const id = el.dataset.id;
+
+        const resp = await fetch(`/pedido_json/${id}`);
+
+        const data = await resp.json();
+
+        const serviciosGuardados = data.servicios_existentes || [];
+
+        let html = `
+            <p><strong>Cliente:</strong> ${data.cliente}</p>
+            <p><strong>Teléfono:</strong> ${data.telefono}</p>
+            <p><strong>Descripción:</strong> ${data.descripcion}</p>
+            <hr>
+            <h5>Servicios seleccionados</h5>
+        `;
+
+        if (serviciosGuardados.length > 0) {
+            // 🔵 MOSTRAR SERVICIOS REGISTRADOS
+            serviciosGuardados.forEach(s => {
+                html += `
+                    <div class="mb-3">
+                        <label><strong>${s.servicio}</strong></label>
+                        <p><strong>Precio:</strong> $${s.precio ?? "—"}</p>
+                        <p><strong>Comentario:</strong><br>${s.comentario || "—"}</p>
+                    </div>
+                `;
+            });
+
+            html += `
+                <hr>
+                <p><strong>Encargado:</strong> ${data.encargado || "—"}</p>
+            `;
+        }else{data.servicios_si.forEach(s => {
+            html += `
+                <div class="mb-3">
+                    <label><strong>${s}</strong></label>
+                    <div class="input-group mb-1">
+                        <span class="input-group-text">$</span>
+                        <input type="number" class="form-control precio-input" data-servicio="${s}">
+                    </div>
+
+                    <textarea class="form-control comentario-input"
+                              placeholder="Comentario opcional"
+                              data-servicio="${s}"></textarea>
+                </div>
+            `;
+        });
+
+        html += `
+            <hr>
+            <div class="mb-3">
+                <label class="form-label"><strong>Encargado</strong></label>
+                <input type="text" class="form-control" id="encargadoInput"
+                       placeholder="Nombre del encargado"
+                            value="${encargadoGuardado}">
+            </div>
+        `;
+
+
+        }
+
+
+
+        document.getElementById("modalContenido").innerHTML = html;
+        document.getElementById("btnGuardar").setAttribute("data-id", id);
+
+        new bootstrap.Modal(document.getElementById("modalProcesar")).show();
+    });
+});
+
+// 🔵 GUARDAR Y PROCESAR
+document.getElementById("btnGuardar").addEventListener("click", async () => {
+    const id = document.getElementById("btnGuardar").dataset.id;
+
+    const precios = {};
+    document.querySelectorAll(".precio-input").forEach(inp => {
+        precios[inp.dataset.servicio] = inp.value;
+    });
+
+    const comentarios = {};
+    document.querySelectorAll(".comentario-input").forEach(inp => {
+        comentarios[inp.dataset.servicio] = inp.value;
+    });
+
+    const encargado = document.getElementById("encargadoInput").value;
+
+    await fetch(`/procesar_pedido/${id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ precios, comentarios, encargado })
+    });
+
+    alert("Ticket Impreso");
+    location.reload();
+});
+
+</script>
+
+
+</body>
+</html>

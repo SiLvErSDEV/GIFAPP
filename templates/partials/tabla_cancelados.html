@@ -1,0 +1,42 @@
+{% if pedidos_cancelados %}
+<div class="mt-4">
+    <h4 class="mb-3">Pedidos Cancelados</h4>
+    <div class="table-responsive shadow rounded p-3 bg-white">
+        <table class="table table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Teléfono</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pedido in pedidos_cancelados %}
+                <tr>
+                    <td>
+                        <span class="clickable pedido-link" data-id="{{ pedido.id }}">
+                            {{ pedido.id }}
+                        </span>
+                    </td>
+                    <td>{{ pedido.cliente.nombre if pedido.cliente else '—' }}</td>
+                    <td>{{ pedido.cliente.telefono if pedido.cliente else '—' }}</td>
+                    <td>{{ pedido.descripcion }}</td>
+                    <td>
+                        <span class="badge bg-danger">Cancelado</span>
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('cancelar_pedido', pedido_id=pedido.id) }}"
+                              onsubmit="return confirm('¿Cancelar este pedido?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Cancelar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}

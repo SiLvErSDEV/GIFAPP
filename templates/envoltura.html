@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalles del regalo | Marraine Étoilée</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+  body {
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .papel-card {
+    position: relative;
+  }
+
+  .papel-card input[type="radio"] {
+    display: none;
+  }
+
+  .papel-card label {
+    cursor: pointer;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    display: inline-block;
+  }
+
+  .papel-card img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+  }
+
+  /* Efecto al pasar el mouse */
+  .papel-card label:hover img {
+    transform: scale(1.05);
+    box-shadow: 0 0 8px rgba(0,0,0,0.15);
+  }
+
+  /* Efecto cuando está seleccionado */
+  .papel-card input[type="radio"]:checked + label {
+    border: 3px solid #3b82f6;
+    box-shadow: 0 0 10px rgba(59,130,246,0.4);
+  }
+
+  /* Botón azul consistente */
+  .btn-lang {
+    background-color: #3b82f6;
+    color: #fff;
+    border-radius: 10px;
+    transition: background-color 0.2s ease;
+  }
+
+  .btn-lang:hover {
+    background-color: #2563eb;
+    color: #fff;
+  }
+</style>
+
+</head>
+<body class="bg-light">
+
+  <!-- Encabezado -->
+    <header class="d-flex justify-content-between align-items-center p-4">
+      <h2 class="fw-bold text-dark">Detalles del regalo ({{ index }}/{{ total }})</h2>
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Marraine Étoilée" style="max-height:70px;">
+    </header>
+
+  <!-- Contenedor -->
+  <div class="container-fluid py-4">
+    <form action="{{ url_for('envoltura') }}" method="POST" class="p-4">
+
+      <div class="row g-4">
+        <!-- COLUMNA IZQUIERDA -->
+        <div class="col-md-8">
+          <!-- Descripción -->
+          <div class="mb-4">
+            <label for="descripcion" class="form-label fw-semibold">Describe lo más detallado posible tu regalo:</label>
+            <textarea id="descripcion" name="descripcion" class="form-control" rows="2" placeholder="(Qué es, talla, color, marca)" required></textarea>
+          </div>
+
+        <div class="mb-4">
+          <label for="para" class="form-label fw-semibold">¿Para quién es el regalo?</label>
+          <input type="text" id="para" name="para" class="form-control" placeholder="Ejemplo: Carlos" required>
+        </div>
+
+          <!-- Papeles de regalo -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold d-block mb-3">Escoge el papel para este regalo:</label>
+            <div class="d-flex flex-wrap gap-3">
+              <!-- Cada muestra de papel -->
+              {% for i in range(1,11) %}
+              <div class="papel-card">
+                  {% if i == 1 %}
+                    <input type="radio" name="papel" id="papel1" value="CD" required>
+                    <label for="papel1">
+                      <img src="{{ url_for('static', filename='img/papel1.png') }}" alt="CD">
+                    </label>
+
+                  {% elif i == 2 %}
+                    <input type="radio" name="papel" id="papel2" value="NQ" required>
+                    <label for="papel2">
+                      <img src="{{ url_for('static', filename='img/papel2.png') }}" alt="NQ">
+                    </label>
+
+                  {% elif i == 3 %}
+                    <input type="radio" name="papel" id="papel3" value="AD" required>
+                    <label for="papel3">
+                      <img src="{{ url_for('static', filename='img/papel3.png') }}" alt="AD">
+                    </label>
+
+                  {% else %}
+                    <input type="radio" name="papel" id="papel{{ i }}" value="Papel {{ i }}" required>
+                    <label for="papel{{ i }}">
+                      <img src="{{ url_for('static', filename='img/papel' ~ i ~ '.png') }}" alt="Papel {{ i }}">
+                    </label>
+
+                  {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- COLUMNA DERECHA -->
+        <div class="col-md-4 d-flex flex-column align-items-center justify-content-between">
+
+
+          <div class="w-100">
+          <!-- Preguntas rápidas -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">¿Necesita caja?</label><br>
+            <input type="radio" name="caja" value="Sí" required> Sí
+            <input type="radio" name="caja" value="No"> No
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">¿Quiere listón?</label><br>
+            <input type="radio" name="liston" value="Sí" required> Sí
+            <input type="radio" name="liston" value="No"> No
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">¿Quiere moño?</label><br>
+            <input type="radio" name="mono" value="Sí" required> Sí
+            <input type="radio" name="mono" value="No"> No
+          </div>
+
+          <!-- 🆕 NUEVA PREGUNTA -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">¿Quiere etiqueta?</label><br>
+            <input type="radio" name="etiqueta" value="Sí" required> Sí
+            <input type="radio" name="etiqueta" value="No"> No
+          </div>
+
+              <div class="mb-3" id="campoDemo" style="display:none;">
+                  <label class="form-label fw-semibold">Número de Demo</label>
+                  <input type="text" name="numero_demo" class="form-control">
+                </div>
+        </div>
+
+
+          <!-- Botón siguiente -->
+          <div class="text-center mt-4 w-100">
+            <button type="submit" class="btn btn-lang py-3 fs-5">Siguiente</button>
+          </div>
+        </div>
+      </div>
+
+    </form>
+
+  <div class="text-center mt-4">
+      <a href="{{ url_for('formulario') }}" class="text-decoration-none text-secondary small">&larr; Volver atrás</a>
+    </div>
+  </div>
+
+</body>
+
+<script>
+function actualizarCampos() {
+  const tipo = document.querySelector('input[name="papel"]:checked')?.value;
+
+  const campos = ["caja", "liston", "mono", "etiqueta"];
+  const campoDemo = document.getElementById("campoDemo");
+
+  if (!tipo) return;
+
+  // Reseteo inicial
+  campos.forEach(c => {
+    document.querySelectorAll(`input[name="${c}"]`).forEach(r => {
+      r.disabled = false;
+      r.checked = false;
+    });
+  });
+  campoDemo.style.display = "none";
+
+  // Reglas especiales
+  if (tipo === "AD" || tipo === "NQ") {
+    // Marcar todo a SI y bloquear
+    campos.forEach(c => {
+      const radioSi = document.querySelector(`input[name="${c}"][value="Sí"]`);
+      const radioNo = document.querySelector(`input[name="${c}"][value="No"]`);
+
+      radioSi.checked = true;
+      radioSi.disabled = true;
+      radioNo.disabled = true;
+    });
+  }
+
+  if (tipo === "CD") {
+    // Bloquear todo y marcar en blanco
+    campos.forEach(c => {
+      document.querySelectorAll(`input[name="${c}"]`).forEach(r => {
+        r.disabled = true;
+        r.checked = false;
+      });
+    });
+
+    campoDemo.style.display = "block";
+  }
+}
+
+document.querySelectorAll('input[name="papel"]').forEach(radio => {
+  radio.addEventListener("change", actualizarCampos);
+});
+</script>
+
+
+
+</html>
