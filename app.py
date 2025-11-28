@@ -12,13 +12,15 @@ import io
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A5, A6, portrait
 from reportlab.lib.units import mm
+from extensions import db
+
 
 
 app = Flask(__name__)
 app.secret_key = "clave-secreta"  # Necesaria para usar session
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/data.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+db.init_app(app)
 from models import Envoltura, Cliente, PedidoServicio, Pedido
 with app.app_context():
     db.create_all()
